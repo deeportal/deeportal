@@ -1,0 +1,132 @@
+#include <Wire.h> 
+#include <Servo.h>
+//**ww
+float value=0;
+float rev=0;
+int rpm;
+int oldtime=0;
+int time;
+//**ww
+Servo left;
+Servo right;
+
+
+int pos = 20;
+int post = 160;
+int back = 20;
+int forward = 160;
+
+int red = 4;
+int green = 6;
+int blue = 7;
+
+
+int slow = 9;
+int medium = 5;
+int fast = 3;
+
+//**ww
+void isr() //interrupt service routine
+{
+rev++;
+}
+//**ww
+   
+void setup() 
+{
+Serial.begin(9600);
+//**
+{
+attachInterrupt(0,isr,RISING); //attaching the interrupt
+}
+//**
+
+right.attach(3);
+
+pinMode(red, OUTPUT);
+pinMode(blue, OUTPUT);
+pinMode(green, OUTPUT);
+left.write(back);
+right.write(back);
+
+
+digitalWrite(red, HIGH);
+delay(1000);
+digitalWrite(red, LOW);
+delay(1000); 
+digitalWrite(green, HIGH);
+delay(1000);
+digitalWrite(green, LOW);
+delay(1000);
+digitalWrite(blue, HIGH);
+delay(1000);
+digitalWrite(blue, LOW);
+delay(1000); 
+
+}
+void loop()
+{
+  //**
+  delay(1000);
+detachInterrupt(0);         
+time=millis()-oldtime;        //finding total time for one rev 
+rpm=((rev/time)*60000)/4;         // Türbin Kanat sayısına göre 4 saysını değiştirin 
+oldtime=millis();             
+rev=0;
+
+Serial.print("  RPM TESTER  ");    //printing on Serial
+
+Serial.print(     rpm);
+Serial.print(" RPM");
+Serial.print("   ");                //final result
+attachInterrupt(0,isr,RISING);
+  //**
+ int pent = analogRead(A0);
+  Serial.println(pent);
+
+  if (pent > 682 && pent < 1023) {
+    digitalWrite(red, HIGH);
+    digitalWrite(green, LOW);
+    digitalWrite(blue, LOW);
+    for (pos = back; pos <= forward; pos += 1) {
+      left.write(pos);
+      right.write(pos);
+      delay(slow);
+    }
+    for (pos = forward; pos >= back; pos -= 1) {
+      left.write(pos);
+      right.write(pos);
+      delay(slow);
+    }
+  }
+  else if (pent > 341 && pent < 682) {
+    digitalWrite(red, LOW);
+    digitalWrite(green, HIGH); 
+    digitalWrite(blue, LOW);
+    for (pos = back; pos <= forward; pos += 1) {
+      left.write(pos);
+      right.write(pos);
+      delay(medium);
+    }
+    for (pos = forward; pos >= back; pos -= 1) {
+      left.write(pos);
+      right.write(pos);
+      delay(medium);
+    }
+  }
+    else if (pent < 341) {
+    digitalWrite(red, LOW);
+    digitalWrite(green, LOW);
+    digitalWrite(blue, HIGH);
+    for (pos = back; pos <= forward; pos += 1) {
+      left.write(pos);
+      right.write(pos);
+      delay(fast);
+    }
+    for (pos = forward; pos >= back; pos -= 1) {
+      left.write(pos);
+      right.write(pos);
+      delay(fast);
+    }
+  }
+}
